@@ -1,0 +1,14 @@
+name: ToastedPluginDisabler
+version: '${project.version}'
+main: me.serbob.toastedplugindisabler.ToastedPluginDisabler
+api-version: 1.19
+authors: [ Serbob ]
+description: A simple system that disables plugins.
+commands:
+  toastedplugindisabler:
+    description: Reload the config.yml for ToastedPluginDisabler.
+    permission: toastedplugindisabler.overall
+    aliases:
+      - pd
+      - plugind
+      - toasteddisabler
