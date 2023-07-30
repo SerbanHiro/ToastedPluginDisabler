@@ -20,12 +20,8 @@ public final class ToastedPluginDisabler extends JavaPlugin {
                 List<String> disabledPlugins = getConfig().getStringList("disabled-plugins");
                 if (disabledPlugins != null) {
                     for (String pluginName : disabledPlugins) {
-                        // Get the plugin from the PluginManager
                         Plugin plugin = Bukkit.getPluginManager().getPlugin(pluginName);
-                        System.out.println(plugin);
                         if (plugin != null) {
-                            // Disable the plugin
-                            System.out.println(plugin);
                             Bukkit.getPluginManager().disablePlugin(plugin);
                         }
                     }

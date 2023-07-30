@@ -13,65 +13,81 @@ import java.util.List;
 
 public class AddPluginsToDisablerCommand implements CommandExecutor {
     private final ToastedPluginDisabler plugin;
+
     public AddPluginsToDisablerCommand(ToastedPluginDisabler plugin) {
         this.plugin = plugin;
     }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "This command can only be used by players.");
+            return false;
+        }
+
         Player player = (Player) sender;
-        if(!sender.hasPermission("toastedplugindisabler.overall")) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
-            return false;
+        if (!player.hasPermission("toastedplugindisabler.overall")) {
+            player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return true;
         }
-        if(args.length==0) {
-            sender.sendMessage(ChatColor.RED + "Invalid! Usage: /toastedplugindisabler add/remove <Plugin's name>");
-            return false;
+
+        if (args.length == 0 || args.length == 1 && args[0].equalsIgnoreCase("list")) {
+            sendUsageMessage(player);
+            return true;
         }
-        if(args.length<2) {
-            if(!args[0].equals("list")) {
-                sender.sendMessage(ChatColor.RED + "Invalid! Usage: /toastedplugindisabler add/remove <Plugin's name>");
-                return false;
-            }
+
+        String subCommand = args[0].toLowerCase();
+        String pluginName = args[1];
+
+        if (subCommand.equals("add")) {
+            handleAddPlugin(player, pluginName);
+        } else if (subCommand.equals("load")) {
+            handleLoadPlugin(player, pluginName);
+        } else {
+            sendUsageMessage(player);
         }
-        if(!args[0].equals("list")) {
-            if(Bukkit.getPluginManager().getPlugin(args[1])==null) {
-                sender.sendMessage(ChatColor.RED + "This plugin does not exist!");
-                return false;
-            }
-        }
-        if(args[0].equalsIgnoreCase("add")) {
-            List<String> disabledPlugins = plugin.getConfig().getStringList("disabled-plugins");
-            String pluginName = args[1];
-            Plugin pluginToBeDisabled = Bukkit.getPluginManager().getPlugin(pluginName);
-            if (disabledPlugins.contains(pluginName)) {
-                sender.sendMessage(ChatColor.RED + "You have already added this plugin to be disabled!");
-                return false;
-            }
-            disabledPlugins.add(pluginName);
-            plugin.getConfig().set("disabled-plugins", disabledPlugins);
-            plugin.saveConfig();
-            Bukkit.getPluginManager().disablePlugin(pluginToBeDisabled);
-            sender.sendMessage(ChatColor.GREEN + "Plugin added to disabled-plugins list and disabled: " + ChatColor.RED + pluginName);
-        } else if(args[0].equalsIgnoreCase("load")) {
-            List<String> disabledPlugins = plugin.getConfig().getStringList("disabled-plugins");
-            String pluginName = args[1];
-            if (!disabledPlugins.contains(pluginName)) {
-                sender.sendMessage(ChatColor.RED + "That plugin doesn't exist in config.yml!");
-                return false;
-            }
-            disabledPlugins.remove(pluginName);
-            plugin.getConfig().set("disabled-plugins", disabledPlugins);
-            plugin.saveConfig();
-            Plugin pluginToBeEnabled = Bukkit.getPluginManager().getPlugin(pluginName);
-            Bukkit.getPluginManager().enablePlugin(pluginToBeEnabled);
-            sender.sendMessage(ChatColor.RED + pluginName + ChatColor.GREEN + " has been removed from the list and loaded!");
-        } else if(args[0].equalsIgnoreCase("list")) {
-            sender.sendMessage(ChatColor.GOLD + "The following plugins are"  + ChatColor.RED + " disabled" + ChatColor.GOLD + ":");
-            List<String> disabledPlugins = plugin.getConfig().getStringList("disabled-plugins");
-            for(String key: disabledPlugins) {
-                sender.sendMessage(ChatColor.GOLD + " - " + ChatColor.RED + key);
-            }
-        }
+
         return true;
     }
+
+    private void handleAddPlugin(Player player, String pluginName) {
+        List<String> disabledPlugins = plugin.getConfig().getStringList("disabled-plugins");
+        Plugin pluginToBeDisabled = Bukkit.getPluginManager().getPlugin(pluginName);
+
+        if (disabledPlugins.contains(pluginName)) {
+            player.sendMessage(ChatColor.RED + "You have already added this plugin to be disabled!");
+            return;
+        }
+
+        disabledPlugins.add(pluginName);
+        plugin.getConfig().set("disabled-plugins", disabledPlugins);
+        plugin.saveConfig();
+        Bukkit.getPluginManager().disablePlugin(pluginToBeDisabled);
+        player.sendMessage(ChatColor.GREEN + "Plugin added to disabled-plugins list and disabled: " + ChatColor.RED + pluginName);
+    }
+
+    private void handleLoadPlugin(Player player, String pluginName) {
+        List<String> disabledPlugins = plugin.getConfig().getStringList("disabled-plugins");
+
+        if (!disabledPlugins.contains(pluginName)) {
+            player.sendMessage(ChatColor.RED + "That plugin doesn't exist in config.yml!");
+            return;
+        }
+
+        disabledPlugins.remove(pluginName);
+        plugin.getConfig().set("disabled-plugins", disabledPlugins);
+        plugin.saveConfig();
+
+        Plugin pluginToBeEnabled = Bukkit.getPluginManager().getPlugin(pluginName);
+        Bukkit.getPluginManager().enablePlugin(pluginToBeEnabled);
+        player.sendMessage(ChatColor.RED + pluginName + ChatColor.GREEN + " has been removed from the list and loaded!");
+    }
+
+    private void sendUsageMessage(Player player) {
+        player.sendMessage(ChatColor.RED + "Usage:");
+        player.sendMessage(ChatColor.RED + "/toastedplugindisabler add <Plugin's name>");
+        player.sendMessage(ChatColor.RED + "/toastedplugindisabler load <Plugin's name>");
+        player.sendMessage(ChatColor.RED + "/toastedplugindisabler list");
+    }
 }
+
